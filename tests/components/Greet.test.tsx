@@ -1,7 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import Greet from '@/components/Greet';
+
+import { render } from 'tests/utils/custom-render';
 
 describe('Greet Component', () => {
   it('should render Hello with the provided name', () => {
