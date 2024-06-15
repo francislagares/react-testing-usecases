@@ -1,6 +1,7 @@
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
 import { cleanup } from '@testing-library/react';
+import ResizeObserver from 'resize-observer-polyfill';
 import { afterEach, beforeAll, expect, vi } from 'vitest';
 
 declare module 'vitest' {
@@ -9,10 +10,15 @@ declare module 'vitest' {
       TestingLibraryMatchers<T, void> {}
 }
 
-expect.extend(matchers);
-
 // mocking methods which are not implemented in JSDOM
 beforeAll(() => {
+  expect.extend(matchers);
+  global.ResizeObserver = ResizeObserver;
+
+  window.HTMLElement.prototype.scrollIntoView = vi.fn();
+  window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+  window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation(query => ({
