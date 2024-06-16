@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { delay, http, HttpResponse } from 'msw';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import ProductList from '@/components/ProductList';
@@ -38,5 +38,41 @@ describe('ProductList Component', () => {
     const message = await screen.findByText(/no products/i);
 
     expect(message).toBeInTheDocument();
+  });
+
+  it('should render error message when there is an error', async () => {
+    mswServer.use(http.get('/products', () => HttpResponse.error()));
+
+    render(<ProductList />);
+
+    expect(await screen.findByText(/error/i)).toBeInTheDocument();
+  });
+
+  it('should render a loading indicator when fetching data', async () => {
+    mswServer.use(
+      http.get('/products', async () => {
+        await delay();
+
+        return HttpResponse.json([]);
+      }),
+    );
+
+    render(<ProductList />);
+
+    expect(await screen.findByText(/loading/i)).toBeInTheDocument();
+  });
+
+  it('should remove loading indicator after data is fetched', async () => {
+    render(<ProductList />);
+
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
+  });
+
+  it('should remove loading indicator if data fetching fails', async () => {
+    mswServer.use(http.get('/products', () => HttpResponse.error()));
+
+    render(<ProductList />);
+
+    await waitForElementToBeRemoved(() => screen.queryByText(/loading/i));
   });
 });
