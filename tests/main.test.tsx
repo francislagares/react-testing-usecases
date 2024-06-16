@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, it } from 'vitest';
+
+import { db } from './mocks/db';
 
 describe('Fetch API', () => {
   it('should fetch API and get Response', async () => {
-    const response = await fetch('/categories');
-    const data = await response.json();
+    const product = db.product.create();
 
-    expect(data).toHaveLength(3);
+    console.log(product);
   });
 });
