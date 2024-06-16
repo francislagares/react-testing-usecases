@@ -2,16 +2,18 @@ import * as matchers from '@testing-library/jest-dom/matchers';
 import { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers';
 import { cleanup } from '@testing-library/react';
 import ResizeObserver from 'resize-observer-polyfill';
-import { afterEach, beforeAll, expect, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, expect, vi } from 'vitest';
 
+import { mswServer } from './mocks/server';
 declare module 'vitest' {
   interface Assertion<T = any>
     extends jest.Matchers<void, T>,
       TestingLibraryMatchers<T, void> {}
 }
 
-// mocking methods which are not implemented in JSDOM
 beforeAll(() => {
+  mswServer.listen();
+
   expect.extend(matchers);
   global.ResizeObserver = ResizeObserver;
 
@@ -19,6 +21,7 @@ beforeAll(() => {
   window.HTMLElement.prototype.hasPointerCapture = vi.fn();
   window.HTMLElement.prototype.releasePointerCapture = vi.fn();
 
+  // mocking methods which are not implemented in JSDOM
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: vi.fn().mockImplementation(query => ({
@@ -36,5 +39,11 @@ beforeAll(() => {
 
 // runs a cleanup after each test case (e.g. clearing jsdom)
 afterEach(() => {
+  mswServer.resetHandlers();
+
   cleanup();
+});
+
+afterAll(() => {
+  mswServer.close();
 });
