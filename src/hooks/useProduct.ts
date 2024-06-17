@@ -7,7 +7,7 @@ const useProduct = (productId: number) => {
   return useQuery<Product, Error>({
     queryKey: ['products', productId],
     queryFn: () => fetchProduct(productId),
-    cacheTime: 0,
+    staleTime: 0,
   });
 };
 
