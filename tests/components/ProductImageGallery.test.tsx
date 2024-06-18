@@ -1,9 +1,8 @@
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import ProductImageGallery from '@/components/ProductImageGallery';
 
-import { render } from 'tests/utils/custom-render';
 
 describe('ProductImageGallery Component', () => {
   it('should render nothing if given an empty array', () => {

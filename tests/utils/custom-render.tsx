@@ -1,7 +1,10 @@
 import { PropsWithChildren, ReactElement } from 'react';
 
+import { Theme } from '@radix-ui/themes';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, RenderOptions } from '@testing-library/react';
+
+import { CartProvider } from '@/providers/CartProvider';
 
 const AllProviders = ({ children }: PropsWithChildren) => {
   const client = new QueryClient({
@@ -12,7 +15,13 @@ const AllProviders = ({ children }: PropsWithChildren) => {
     },
   });
 
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={client}>
+      <CartProvider>
+        <Theme>{children}</Theme>
+      </CartProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default AllProviders;
