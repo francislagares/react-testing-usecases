@@ -31,11 +31,9 @@ describe('ProductForm Component', () => {
   });
 
   it('should render input fields', async () => {
-    const { waitForFormToLoad, getInputs } = renderForm();
+    const { waitForFormToLoad } = renderForm();
 
-    await waitForFormToLoad();
-
-    const { nameInput, priceInput, categoryInput } = getInputs();
+    const { nameInput, priceInput, categoryInput } = await waitForFormToLoad();
 
     expect(nameInput).toBeInTheDocument();
     expect(priceInput).toBeInTheDocument();
@@ -43,13 +41,11 @@ describe('ProductForm Component', () => {
   });
 
   it('should render categories', async () => {
-    const { getCategoriesComboBox, waitForFormToLoad, getInputs } =
-      renderForm();
+    const { getCategoriesComboBox, waitForFormToLoad } = renderForm();
 
-    await waitForFormToLoad();
+    const { categoryInput } = await waitForFormToLoad();
 
     const combobox = getCategoriesComboBox();
-    const { categoryInput } = getInputs();
 
     expect(combobox).toBeInTheDocument();
     expect(categoryInput).toBeInTheDocument();
@@ -72,15 +68,40 @@ describe('ProductForm Component', () => {
       categoryId: category.id,
     };
 
-    const { waitForFormToLoad, getInputs } = renderForm(product);
+    const { waitForFormToLoad } = renderForm(product);
 
-    await waitForFormToLoad();
-
-    const inputs = getInputs();
+    const inputs = await waitForFormToLoad();
 
     expect(inputs.nameInput).toHaveValue(product.name);
     expect(inputs.priceInput).toHaveValue(product.price.toString());
     expect(inputs.categoryInput).toHaveTextContent(category.name);
+  });
+
+  it('should focus on the name field', async () => {
+    const { waitForFormToLoad } = renderForm();
+
+    const { nameInput } = await waitForFormToLoad();
+
+    expect(nameInput).toHaveFocus();
+  });
+
+  it('should display error if name is missing', async () => {
+    const { waitForFormToLoad } = renderForm();
+
+    const form = await waitForFormToLoad();
+    const user = userEvent.setup();
+
+    await user.type(form.priceInput, '10');
+    await user.click(form.categoryInput);
+
+    const options = screen.getAllByRole('option');
+    await user.click(options[0]!);
+
+    await user.click(form.submitButton);
+
+    const error = screen.getByRole('alert');
+    expect(error).toBeInTheDocument();
+    expect(error).toHaveTextContent(/required/i);
   });
 });
 
@@ -88,12 +109,14 @@ const renderForm = (product?: Product) => {
   const onChange = vi.fn();
   render(<ProductForm product={product} onSubmit={onChange} />);
 
-  const waitForFormToLoad = () => screen.findByRole('form');
-  const getInputs = () => {
+  const waitForFormToLoad = async () => {
+    await screen.findByRole('form');
+
     return {
       nameInput: screen.getByPlaceholderText(/name/i),
       priceInput: screen.getByPlaceholderText(/price/i),
       categoryInput: screen.getByRole('combobox', { name: /category/i }),
+      submitButton: screen.getByRole('button'),
     };
   };
 
@@ -109,7 +132,6 @@ const renderForm = (product?: Product) => {
   };
 
   return {
-    getInputs,
     getCategoriesComboBox,
     waitForFormToLoad,
     selectCategory,
