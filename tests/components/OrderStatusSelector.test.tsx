@@ -1,4 +1,3 @@
-import { Theme } from '@radix-ui/themes';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -10,11 +9,7 @@ import { render } from 'tests/utils/custom-render';
 describe('OrderStatusSelector Component', () => {
   const onChange = vi.fn();
   const renderComponent = () => {
-    render(
-      <Theme>
-        <OrderStatusSelector onChange={onChange} />
-      </Theme>,
-    );
+    render(<OrderStatusSelector onChange={onChange} />);
 
     return {
       trigger: screen.getByRole('combobox'),
