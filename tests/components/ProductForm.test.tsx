@@ -188,6 +188,7 @@ const renderForm = (product?: Product) => {
         if (product.price !== undefined)
           await user.type(priceInput, product.price.toString());
 
+        await user.tab();
         await user.click(categoryInput);
         const options = screen.getAllByRole('option');
         await user.click(options[0]!);
