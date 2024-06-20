@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Toaster } from 'react-hot-toast';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import ProductForm from '@/components/ProductForm';
@@ -29,6 +30,74 @@ describe('ProductForm Component', () => {
       where: { id: { in: categoryIds } },
     });
   });
+
+  const renderForm = (product?: Product) => {
+    const onSubmit = vi.fn();
+    render(
+      <>
+        <ProductForm product={product} onSubmit={onSubmit} />
+        <Toaster />
+      </>,
+    );
+
+    return {
+      onSubmit,
+      getCategoriesComboBox: () => screen.getByRole('combobox'),
+      expectErrorToBeInTheDocument: (errorMessage: RegExp) => {
+        const error = screen.getByRole('alert');
+        expect(error).toBeInTheDocument();
+        expect(error).toHaveTextContent(errorMessage);
+      },
+
+      waitForFormToLoad: async () => {
+        await screen.findByRole('form');
+
+        const nameInput = screen.getByPlaceholderText(/name/i);
+        const priceInput = screen.getByPlaceholderText(/price/i);
+        const categoryInput = screen.getByRole('combobox', {
+          name: /category/i,
+        });
+        const submitButton = screen.getByRole('button');
+
+        type FormData = {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          [K in keyof Product]: any;
+        };
+
+        const validData: FormData = {
+          id: 1,
+          name: 'a',
+          price: 1,
+          categoryId: category.id,
+        };
+
+        const fill = async (product: FormData) => {
+          const user = userEvent.setup();
+
+          if (product.name !== undefined)
+            await user.type(nameInput, product.name);
+
+          if (product.price !== undefined)
+            await user.type(priceInput, product.price.toString());
+
+          await user.tab();
+          await user.click(categoryInput);
+          const options = screen.getAllByRole('option');
+          await user.click(options[0]!);
+          await user.click(submitButton);
+        };
+
+        return {
+          fill,
+          nameInput,
+          priceInput,
+          categoryInput,
+          submitButton,
+          validData,
+        };
+      },
+    };
+  };
 
   it('should render input fields', async () => {
     const { waitForFormToLoad } = renderForm();
@@ -143,66 +212,47 @@ describe('ProductForm Component', () => {
       expectErrorToBeInTheDocument(errorMessage);
     },
   );
+
+  it('should call onSubmit with the correct data', async () => {
+    const { waitForFormToLoad, onSubmit } = renderForm();
+
+    const form = await waitForFormToLoad();
+    await form.fill(form.validData);
+
+    const { id, ...formData } = form.validData;
+    expect(onSubmit).toHaveBeenCalledWith(formData);
+  });
+
+  it('should display a toast if submission fails', async () => {
+    const { waitForFormToLoad, onSubmit } = renderForm();
+    onSubmit.mockRejectedValue({});
+
+    const form = await waitForFormToLoad();
+    await form.fill(form.validData);
+
+    const toast = await screen.findByRole('status');
+
+    expect(toast).toBeInTheDocument();
+    expect(toast).toHaveTextContent(/error/i);
+  });
+
+  it('should disable the submit button upon submission', async () => {
+    const { waitForFormToLoad, onSubmit } = renderForm();
+    onSubmit.mockReturnValue(new Promise(() => {}));
+
+    const form = await waitForFormToLoad();
+    await form.fill(form.validData);
+
+    expect(form.submitButton).toBeDisabled();
+  });
+
+  it('should re-enable the submit button after submission', async () => {
+    const { waitForFormToLoad, onSubmit } = renderForm();
+    onSubmit.mockRejectedValue('error');
+
+    const form = await waitForFormToLoad();
+    await form.fill(form.validData);
+
+    expect(form.submitButton).not.toBeDisabled();
+  });
 });
-
-const renderForm = (product?: Product) => {
-  const onChange = vi.fn();
-  render(<ProductForm product={product} onSubmit={onChange} />);
-
-  return {
-    getCategoriesComboBox: () => screen.getByRole('combobox'),
-    expectErrorToBeInTheDocument: (errorMessage: RegExp) => {
-      const error = screen.getByRole('alert');
-      expect(error).toBeInTheDocument();
-      expect(error).toHaveTextContent(errorMessage);
-    },
-
-    waitForFormToLoad: async () => {
-      await screen.findByRole('form');
-
-      const nameInput = screen.getByPlaceholderText(/name/i);
-      const priceInput = screen.getByPlaceholderText(/price/i);
-      const categoryInput = screen.getByRole('combobox', {
-        name: /category/i,
-      });
-      const submitButton = screen.getByRole('button');
-
-      type FormData = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [K in keyof Product]: any;
-      };
-
-      const validData: FormData = {
-        id: 1,
-        name: 'a',
-        price: 1,
-        categoryId: 1,
-      };
-
-      const fill = async (product: FormData) => {
-        const user = userEvent.setup();
-
-        if (product.name !== undefined)
-          await user.type(nameInput, product.name);
-
-        if (product.price !== undefined)
-          await user.type(priceInput, product.price.toString());
-
-        await user.tab();
-        await user.click(categoryInput);
-        const options = screen.getAllByRole('option');
-        await user.click(options[0]!);
-        await user.click(submitButton);
-      };
-
-      return {
-        nameInput,
-        priceInput,
-        categoryInput,
-        submitButton,
-        fill,
-        validData,
-      };
-    },
-  };
-};
