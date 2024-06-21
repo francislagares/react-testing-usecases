@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, RenderOptions } from '@testing-library/react';
 
 import { CartProvider } from '@/providers/CartProvider';
+import ReduxProvider from '@/providers/ReduxProvider';
 
 const AllProviders = ({ children }: PropsWithChildren) => {
   const client = new QueryClient({
@@ -17,9 +18,11 @@ const AllProviders = ({ children }: PropsWithChildren) => {
 
   return (
     <QueryClientProvider client={client}>
-      <CartProvider>
-        <Theme>{children}</Theme>
-      </CartProvider>
+      <ReduxProvider>
+        <CartProvider>
+          <Theme>{children}</Theme>
+        </CartProvider>
+      </ReduxProvider>
     </QueryClientProvider>
   );
 };

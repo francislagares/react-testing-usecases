@@ -1,12 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import QuantitySelector from '@/components/QuantitySelector';
 
-import { CartProvider } from '@/providers/CartProvider';
-
 import { Product } from '@/entities';
+import { render } from 'tests/utils/custom-render';
 
 describe('QuantitySelector Component', () => {
   const renderComponent = () => {
@@ -17,11 +16,7 @@ describe('QuantitySelector Component', () => {
       categoryId: 1,
     };
 
-    render(
-      <CartProvider>
-        <QuantitySelector product={product} />
-      </CartProvider>,
-    );
+    render(<QuantitySelector product={product} />);
 
     const getAddToCartButton = () =>
       screen.queryByRole('button', {
