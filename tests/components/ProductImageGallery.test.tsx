@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 import ProductImageGallery from '@/components/ProductImageGallery';
 
-
 describe('ProductImageGallery Component', () => {
   it('should render nothing if given an empty array', () => {
     const { container } = render(<ProductImageGallery imageUrls={[]} />);
